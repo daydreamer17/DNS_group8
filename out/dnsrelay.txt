@@ -1,0 +1,6 @@
+0.0.0.0 www.666.com
+114.255.40.66 www.bupt.com.cn
+0.0.0.0 otheve.beacon.qq.com
+
+
+ 
