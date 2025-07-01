@@ -123,7 +123,7 @@ nslookup www.bupt.com.cn 127.0.0.1
 nslookup www.google.com 127.0.0.1
 ```
 
-#### 6. 错误与超时处理
+#### 6. 错误与超时处理（以管理员权限打开IDE（端口53的情况下））
 
 ```bash
 java -cp out org.example.DNSRelay -d 192.0.2.1 dnsrelay.txt
