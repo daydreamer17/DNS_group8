@@ -260,6 +260,7 @@ class DNSRequestHandler implements Runnable {
             byte[] dnsResponse = forwardQueryToRealDNS(requestData);
             if (dnsResponse == null) {
                 // No response from DNS server (timeout or error) -> return SERVFAIL to client
+                System.err.println("【SERVFAIL】There is no response/error from the upstream DNS, and SERVFAIL has been returned " + clientAddress + ":" + clientPort);
                 if (debugLevel >= 1) {
                     System.out.println(" -> No response from upstream DNS server; returning SERVFAIL.");
                 }
@@ -366,23 +367,34 @@ class DNSRequestHandler implements Runnable {
      * @return The DNS response packet bytes from the real DNS server, or null if no response was received.
      */
     private byte[] forwardQueryToRealDNS(byte[] query) {
-        try (DatagramSocket dnsSocket = new DatagramSocket()) {
+        try (DatagramSocket dnsSocket = new DatagramSocket(null)) {
+            // 显式绑定到本地所有地址（0.0.0.0），端口0（自动分配临时端口）
+            dnsSocket.bind(new InetSocketAddress("0.0.0.0", 0));
+            if (debugLevel >= 1) {
+                System.out.println("The local port of the upstream socket:" + dnsSocket.getLocalPort());
+            }
             dnsSocket.setSoTimeout(5000); // Timeout after 5 seconds if no response
-            // Send the query to the designated DNS server (port 53)
             DatagramPacket dnsReqPacket = new DatagramPacket(query, query.length, dnsServerAddress, 53);
             dnsSocket.send(dnsReqPacket);
-            // Prepare buffer for the response
+
             byte[] buffer = new byte[512];
             DatagramPacket dnsRespPacket = new DatagramPacket(buffer, buffer.length);
-            dnsSocket.receive(dnsRespPacket);
-            // Copy the response data (exact length)
+
+            dnsSocket.receive(dnsRespPacket); // 这里如果一直超时，就是真收不到上游包
+
+            // 日志输出上游响应
+            if (debugLevel >= 1) {
+                int rcode = buffer[3] & 0x0F;
+                System.out.println("THE UPSTREAM DNS RESPONDS TO RCODE: " + rcode + (rcode == 3 ? " (NXDOMAIN)" : (rcode == 0 ? " (NOERROR)" : "")));
+            }
             return Arrays.copyOfRange(dnsRespPacket.getData(), dnsRespPacket.getOffset(),
                     dnsRespPacket.getOffset() + dnsRespPacket.getLength());
         } catch (IOException e) {
-            if (debugLevel >= 2) {
-                System.err.println("Error forwarding query to DNS server: " + e.getMessage());
-            }
+            System.err.println("Error forwarding query to DNS server: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }
+
+
 }
