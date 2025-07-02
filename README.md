@@ -67,7 +67,7 @@ java -cp out org.example.DNSRelay dnsrelay.txt
 | **外部 DNS 转发**    | 查询未在本地表的域名                              | `nslookup www.google.com 127.0.0.1`                                                                 | 控制台输出“Forwarding...”，客户端收到真实 IP                      |
 | **支持 IPv6 响应**   | 查询如 `nslookup www.google.com 127.0.0.1` | `nslookup www.google.com 127.0.0.1`                                                                 | 控制台可见 A/AAAA 多条，客户端有 IPv4+IPv6 地址                    |
 | **抓包分析**         | 启动 Wireshark，过滤 `udp.port==53`          | 任意 nslookup 查询                                                                                      | Wireshark 可见所有 DNS 报文、响应结构                           |
-| **错误处理**         | 启动时指定不可用 DNS（如 192.0.2.1）               | `java -cp out org.example.DNSRelay -d 192.0.2.1 dnsrelay.txt`<br>`nslookup abcxyztestnotexist123456.com 127.0.0.1` | 控制台“returning SERVFAIL”，客户端“Server failed”           |
+| **错误处理**         | 查询不存在的域名                            | `janslookup abcxyztestnotexist123456.com 127.0.0.1`                                                  | 控制台“returning SERVFAIL”，客户端“Server failed”           |
 
 ---
 
